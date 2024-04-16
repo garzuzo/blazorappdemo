@@ -1,0 +1,68 @@
+@page "/product"
+@inject ILogger<Products> logger;
+@inject IProductService productService;
+@inject NavigationManager NavigationManager;
+@inject IJSRuntime JSRuntime;
+@inject IToastService toastService;
+
+<PageTitle>Products</PageTitle>
+<ModuleTitle Title="Products" />
+<button class="btn btn-dark" @onclick="@(()=> NavigationManager.NavigateTo("/addproduct"))">Add product</button>
+@if (products?.Count > 0)
+{
+    <div class="products-container">
+    @foreach (var product in products)
+        {
+            <div class="card" style="width: 18rem;">
+                <img src="@product.Images[0]" loading="lazy" class="card-img-top" alt="Product" width="270">
+                <div class="card-body">
+                    <h4>@product.Title</h4>
+                    <p class="card-text">
+                        @product.Price.ToString("C")</p>
+                    <button title="Delete" class="btn btn-danger btn-delete" @onclick="@(()=> DeleteProduct(product))">
+                        <span class="oi oi-trash">
+                        </span>
+                    </button>
+                    <button title="Update" class="btn btn-primary" @onclick="@(()=>NavigateToUpdateProduct(product.Id))">
+                        <span class="oi oi-update"> Update Product
+                        </span>
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p>There are no products to show</p>
+}
+@code {
+
+    private List<Product>? products;
+
+    //asignar los datos iniciales que se van a mostrar dentro del componente
+    protected override async Task OnInitializedAsync()
+    {
+        products = await GetProducts();
+        logger.LogInformation(products.First<Product>().Images[0]);
+    }
+    private async Task<List<Product>> GetProducts()
+    {
+        products = await productService.GetProduct();
+        return products;
+    }
+    private async Task DeleteProduct(Product product)
+    {
+        if (!await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure do you want to remove {product.Title}"))
+            return;
+        await productService.Delete(product.Id);
+        toastService.ShowSuccess($"Deleted product {product.Title}");
+        await GetProducts();
+
+    }
+    private async Task NavigateToUpdateProduct(int id)
+    {
+        NavigationManager.NavigateTo($"/updateproduct/?id={id}");
+
+    }
+}

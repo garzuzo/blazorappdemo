@@ -1,0 +1,7 @@
+.products-container {
+        
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, 280px);
+    grid-auto-flow: auto;
+    grid-gap: 1rem;
+}
